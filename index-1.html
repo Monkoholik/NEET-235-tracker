@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NEET 2027 — Lecture Tracker</title>
+<style>
+:root{--bg:#f4f7fb;--card:#fff;--ink:#172337;--muted:#667085;--blue:#1e4778;--line:#dce4ee;--green:#1b7f54;--soft:#eaf2fb}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:16px;line-height:1.45}
+.app{max-width:980px;margin:0 auto;padding:18px 14px 40px}
+header{background:var(--blue);color:white;border-radius:18px;padding:22px 20px;margin-bottom:16px}
+h1{font-size:clamp(1.35rem,4vw,1.9rem);line-height:1.2;margin:0 0 8px}
+header p{margin:0;color:#e5edf7}
+.summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}
+.metric{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;min-width:0}
+.metric .label{font-size:.85rem;color:var(--muted)}
+.metric .value{font-size:clamp(1.2rem,4vw,1.65rem);font-weight:750;margin-top:3px;overflow-wrap:anywhere}
+.progress-card{background:var(--card);border:1px solid var(--line);padding:16px;border-radius:14px;margin-bottom:16px}
+.bar{height:13px;background:#e7edf4;border-radius:99px;overflow:hidden;margin:10px 0 6px}
+.barfill{height:100%;width:0;background:var(--green);transition:width .2s}
+.subtle{color:var(--muted);font-size:.9rem}
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+button,.btn{font:inherit;border:1px solid var(--line);background:white;color:var(--ink);border-radius:10px;padding:10px 13px;cursor:pointer}
+button.primary{background:var(--blue);color:white;border-color:var(--blue)}
+button:focus-visible,input:focus-visible{outline:3px solid #82b5f4;outline-offset:2px}
+.day{background:var(--card);border:1px solid var(--line);border-radius:15px;margin:12px 0;overflow:hidden}
+.dayhead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 15px;background:#fafdff;border-bottom:1px solid var(--line)}
+.daytitle{font-weight:750}
+.daydate{font-size:.9rem;color:var(--muted)}
+.daycount{white-space:nowrap;background:var(--soft);border-radius:9px;padding:5px 9px;font-size:.85rem;font-weight:700}
+.subjects{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:12px}
+.subject{display:flex;align-items:center;gap:11px;border:1px solid var(--line);border-radius:12px;padding:13px 11px;min-height:60px;background:#fff;cursor:pointer}
+.subject.done{background:#eef8f2;border-color:#a6d8bd}
+.subject input{width:23px;height:23px;accent-color:var(--green);flex:0 0 auto;cursor:pointer}
+.subject .name{font-weight:650}
+.subject .state{display:block;font-size:.78rem;color:var(--muted)}
+.subject.done .state{color:var(--green)}
+.subject.disabled{background:#f1f3f5;color:#737b86;cursor:default}
+.footer-note{margin-top:18px;background:#fff;border:1px solid var(--line);padding:15px;border-radius:14px}
+.hidden{display:none!important}
+@media(min-width:700px){.summary{grid-template-columns:repeat(4,minmax(0,1fr))}.subjects{grid-template-columns:repeat(4,minmax(0,1fr))}.app{padding:24px 20px 50px}}
+@media(max-width:360px){.app{padding:10px 8px 28px}.subjects{gap:7px;padding:9px}.subject{padding:10px 8px;gap:8px}.subject input{width:21px;height:21px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+<h1>NEET 2027 — Lecture Tracker</h1>
+<p>29 October – 27 December 2026 · Target: 235 lectures</p>
+</header>
+<section class="summary" aria-label="Progress summary">
+<div class="metric"><div class="label">Completed</div><div class="value" id="completed">0 / 235</div></div>
+<div class="metric"><div class="label">Completion</div><div class="value" id="percent">0.0%</div></div>
+<div class="metric"><div class="label">Remaining</div><div class="value" id="remaining">235</div></div>
+<div class="metric"><div class="label">Days left in plan</div><div class="value" id="daysleft">59</div></div>
+</section>
+<section class="progress-card">
+<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+<strong>Progress toward 27 December</strong><span id="goalstatus" class="subtle">In progress</span>
+</div>
+<div class="bar" role="progressbar" aria-label="Lecture completion" aria-valuemin="0" aria-valuemax="235" aria-valuenow="0" id="progressbar"><div class="barfill" id="barfill"></div></div>
+<div class="subtle" id="progressline">0 of 235 lectures completed</div>
+<div class="controls">
+<button class="primary" id="todayBtn">Go to today</button>
+<button id="expandBtn">Expand all days</button>
+<button id="collapseBtn">Collapse all days</button>
+<button id="exportBtn">Export backup</button>
+<button id="importBtn">Import backup</button>
+<button id="resetBtn">Reset tracker</button>
+<input id="importFile" type="file" accept="application/json,.json" class="hidden">
+</div>
+<p class="subtle">Tap a subject card or its checkbox to mark it complete. Your progress updates instantly. Use “Export backup” occasionally to save a copy of your records.</p>
+</section>
+<div id="days"></div>
+<section class="footer-note">
+<strong>Plan note</strong>
+<p class="subtle">There are 235 actual lecture slots across 60 days. On 29 October, complete Physics (1 lecture). From 30 October through 26 December, complete all four subjects each day. On 27 December, complete Physics and Chemistry (2 lectures).</p>
+<p class="subtle">Your checkmarks are saved in this browser on this device when local storage is available. They do not automatically sync to another browser or device. Export a backup before clearing browser data or switching devices.</p>
+</section>
+</div>
+<script>
+(function(){
+const start=new Date(2026,9,29), totalDays=60, target=235;
+const subjects=["Physics","Chemistry","Botany","Zoology"];
+const key="neet235Tracker_v1";
+let completed={};
+try{completed=JSON.parse(localStorage.getItem(key)||"{}")||{};}catch(e){completed={};}
+const daysEl=document.getElementById("days");
+const dateFmt=new Intl.DateTimeFormat("en-IN",{weekday:"short",day:"2-digit",month:"short",year:"numeric"});
+function isoDate(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function save(){try{localStorage.setItem(key,JSON.stringify(completed));}catch(e){} update();}
+function isRequired(day,sub){
+ if(day===1)return sub==="Physics";
+ if(day===2)return true;
+ if(day===60)return sub==="Physics"||sub==="Chemistry";
+ return true;
+}
+// Remove any old checkmarks for subjects that are no longer scheduled on days 1–2.
+Object.keys(completed).forEach(id=>{
+ const parts=id.split("-");
+ const day=Number(parts[0]);
+ const sub=parts.slice(1).join("-");
+ const subjectName=subjects.find(name=>name.toLowerCase()===sub);
+ if(!subjectName||day<1||day>totalDays||!isRequired(day,subjectName))delete completed[id];
+});
+function build(){
+ let frag=document.createDocumentFragment();
+ for(let day=1;day<=totalDays;day++){
+   let d=new Date(start);d.setDate(start.getDate()+day-1);
+   const section=document.createElement("details");section.className="day";section.id="day-"+day;
+   if(day===1)section.open=true;
+   const head=document.createElement("summary");head.className="dayhead";
+   const left=document.createElement("div");
+   const title=document.createElement("div");title.className="daytitle";title.textContent="Day "+day;
+   const date=document.createElement("div");date.className="daydate";date.textContent=dateFmt.format(d);
+   left.append(title,date);
+   const count=document.createElement("div");count.className="daycount";count.id="count-"+day;count.textContent="0 / "+(day===1?1:(day===60?2:4));
+   head.append(left,count);section.append(head);
+   const grid=document.createElement("div");grid.className="subjects";
+   subjects.forEach(sub=>{
+      const required=isRequired(day,sub), id=day+"-"+sub.toLowerCase();
+      const label=document.createElement("label");label.className="subject"+(!required?" disabled":"");
+      const input=document.createElement("input");input.type="checkbox";input.dataset.id=id;input.dataset.day=day;input.dataset.subject=sub;
+      if(!required){input.disabled=true;input.checked=false;}
+      else input.checked=!!completed[id];
+      const name=document.createElement("span");name.className="name";name.textContent=sub;
+      const state=document.createElement("span");state.className="state";
+      state.textContent=!required?"Not required":(input.checked?"Completed":"Not completed");
+      name.appendChild(state);
+      if(input.checked)label.classList.add("done");
+      input.addEventListener("change",()=>{
+        if(input.checked)completed[id]=true;else delete completed[id];
+        state.textContent=input.checked?"Completed":"Not completed";
+        label.classList.toggle("done",input.checked);
+        save();
+      });
+      label.append(input,name);grid.append(label);
+   });
+   section.append(grid);frag.append(section);
+ }
+ daysEl.append(frag);update();
+}
+function update(){
+ const count=Object.values(completed).filter(Boolean).length;
+ const safe=Math.min(count,target), pct=safe/target*100;
+ document.getElementById("completed").textContent=safe+" / "+target;
+ document.getElementById("percent").textContent=pct.toFixed(1)+"%";
+ document.getElementById("remaining").textContent=Math.max(0,target-safe);
+ document.getElementById("barfill").style.width=pct+"%";
+ document.getElementById("progressbar").setAttribute("aria-valuenow",safe);
+ document.getElementById("progressline").textContent=safe+" of "+target+" lectures completed · "+Math.max(0,target-safe)+" remaining";
+ document.getElementById("goalstatus").textContent=count>=target?"Goal complete!":"In progress";
+ const today=new Date();today.setHours(0,0,0,0);
+ const end=new Date(start);end.setDate(start.getDate()+totalDays-1);
+ const remainingDays=Math.max(0,Math.ceil((end-today)/86400000)+1);
+ document.getElementById("daysleft").textContent=today<start?totalDays:remainingDays;
+ for(let day=1;day<=totalDays;day++){
+   let done=0,req=day===1?1:(day===60?2:4);
+   subjects.forEach(sub=>{if(isRequired(day,sub)&&completed[day+"-"+sub.toLowerCase()])done++;});
+   const c=document.getElementById("count-"+day);if(c)c.textContent=done+" / "+req+(done===req?" · Done":"");
+ }
+}
+document.getElementById("todayBtn").addEventListener("click",()=>{
+ const now=new Date();now.setHours(0,0,0,0);let diff=Math.floor((now-start)/86400000)+1;diff=Math.max(1,Math.min(totalDays,diff));
+ const el=document.getElementById("day-"+diff);el.open=true;el.scrollIntoView({behavior:"smooth",block:"start"});
+});
+document.getElementById("expandBtn").addEventListener("click",()=>document.querySelectorAll("details.day").forEach(x=>x.open=true));
+document.getElementById("collapseBtn").addEventListener("click",()=>document.querySelectorAll("details.day").forEach(x=>x.open=false));
+document.getElementById("exportBtn").addEventListener("click",()=>{
+ const blob=new Blob([JSON.stringify({title:"NEET 235 Lecture Tracker",version:1,exportedAt:new Date().toISOString(),completed},null,2)],{type:"application/json"});
+ const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="NEET_235_Tracker_Backup.json";a.click();URL.revokeObjectURL(url);
+});
+document.getElementById("importBtn").addEventListener("click",()=>document.getElementById("importFile").click());
+document.getElementById("importFile").addEventListener("change",async e=>{
+ const f=e.target.files&&e.target.files[0];if(!f)return;
+ try{const data=JSON.parse(await f.text());if(!data.completed||typeof data.completed!=="object")throw new Error("Invalid backup");completed=data.completed;save();document.querySelectorAll(".subject input").forEach(inp=>{if(inp.disabled)return;inp.checked=!!completed[inp.dataset.id];const lab=inp.closest(".subject");lab.classList.toggle("done",inp.checked);lab.querySelector(".state").textContent=inp.checked?"Completed":"Not completed";});alert("Backup imported.");}
+ catch(err){alert("Could not import this backup file.");}
+ e.target.value="";
+});
+document.getElementById("resetBtn").addEventListener("click",()=>{
+ if(confirm("Reset all lecture checkmarks? Export a backup first if you want to keep your records.")){completed={};try{localStorage.removeItem(key);}catch(e){}document.querySelectorAll(".subject input").forEach(inp=>{if(inp.disabled)return;inp.checked=false;inp.closest(".subject").classList.remove("done");inp.closest(".subject").querySelector(".state").textContent="Not completed";});update();}
+});
+build();
+})();
+</script>
+</body>
+</html>
