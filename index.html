@@ -91,8 +91,8 @@ const dateFmt=new Intl.DateTimeFormat("en-IN",{weekday:"short",day:"2-digit",mon
 function isoDate(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
 function save(){try{localStorage.setItem(key,JSON.stringify(completed));}catch(e){} update();}
 function isRequired(day,sub){
- if(day===1)return sub==="Physics";
- if(day===2)return sub==="Physics"||sub==="Chemistry";
+ if(day===1)return sub==="Chemistry";
+ if(day===60)return sub==="Physics"||sub==="Chemistry";
  return true;
 }
 // Remove any old checkmarks for subjects that are no longer scheduled on days 1–2.
@@ -155,7 +155,7 @@ function update(){
  const remainingDays=Math.max(0,Math.ceil((end-today)/86400000)+1);
  document.getElementById("daysleft").textContent=today<start?totalDays:remainingDays;
  for(let day=1;day<=totalDays;day++){
-   let done=0,req=day===1?1:(day===2?2:4);
+   let done=0,req=day===1?1:(day===60?2:4);
    subjects.forEach(sub=>{if(isRequired(day,sub)&&completed[day+"-"+sub.toLowerCase()])done++;});
    const c=document.getElementById("count-"+day);if(c)c.textContent=done+" / "+req+(done===req?" · Done":"");
  }
