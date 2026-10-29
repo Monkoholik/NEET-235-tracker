@@ -3,9 +3,6 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#1e4778">
-<link rel="manifest" href="./manifest.webmanifest">
-<link rel="icon" href="./icon-192.png">
 <title>NEET 2027 — Lecture Tracker</title>
 <style>
 :root{--bg:#f4f7fb;--card:#fff;--ink:#172337;--muted:#667085;--blue:#1e4778;--line:#dce4ee;--green:#1b7f54;--soft:#eaf2fb}
@@ -50,7 +47,7 @@ button:focus-visible,input:focus-visible{outline:3px solid #82b5f4;outline-offse
 <div class="app">
 <header>
 <h1>NEET 2027 — Lecture Tracker</h1>
-<p>29 October – 26 December 2026 · Target: 235 lectures</p>
+<p>29 October – 27 December 2026 · Target: 235 lectures</p>
 </header>
 <section class="summary" aria-label="Progress summary">
 <div class="metric"><div class="label">Completed</div><div class="value" id="completed">0 / 235</div></div>
@@ -60,7 +57,7 @@ button:focus-visible,input:focus-visible{outline:3px solid #82b5f4;outline-offse
 </section>
 <section class="progress-card">
 <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
-<strong>Progress toward 26 December</strong><span id="goalstatus" class="subtle">In progress</span>
+<strong>Progress toward 27 December</strong><span id="goalstatus" class="subtle">In progress</span>
 </div>
 <div class="bar" role="progressbar" aria-label="Lecture completion" aria-valuemin="0" aria-valuemax="235" aria-valuenow="0" id="progressbar"><div class="barfill" id="barfill"></div></div>
 <div class="subtle" id="progressline">0 of 235 lectures completed</div>
@@ -78,13 +75,13 @@ button:focus-visible,input:focus-visible{outline:3px solid #82b5f4;outline-offse
 <div id="days"></div>
 <section class="footer-note">
 <strong>Plan note</strong>
-<p class="subtle">There are 235 actual lecture slots across 59 days. The first 58 days have four subjects each (232 lectures); on 26 December, Physics, Chemistry and Botany are the final three required lectures. Zoology is marked “Not required” on the last day.</p>
+<p class="subtle">There are 235 actual lecture slots across 60 days. On 29 October, complete Physics (1 lecture). On 30 October, complete Physics and Chemistry (2 lectures). From 31 October through 27 December, complete all four subjects each day.</p>
 <p class="subtle">Your checkmarks are saved in this browser on this device when local storage is available. They do not automatically sync to another browser or device. Export a backup before clearing browser data or switching devices.</p>
 </section>
 </div>
 <script>
 (function(){
-const start=new Date(2026,9,29), totalDays=59, target=235;
+const start=new Date(2026,9,29), totalDays=60, target=235;
 const subjects=["Physics","Chemistry","Botany","Zoology"];
 const key="neet235Tracker_v1";
 let completed={};
@@ -93,7 +90,19 @@ const daysEl=document.getElementById("days");
 const dateFmt=new Intl.DateTimeFormat("en-IN",{weekday:"short",day:"2-digit",month:"short",year:"numeric"});
 function isoDate(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
 function save(){try{localStorage.setItem(key,JSON.stringify(completed));}catch(e){} update();}
-function isRequired(day,sub){return !(day===59 && sub==="Zoology");}
+function isRequired(day,sub){
+ if(day===1)return sub==="Physics";
+ if(day===2)return sub==="Physics"||sub==="Chemistry";
+ return true;
+}
+// Remove any old checkmarks for subjects that are no longer scheduled on days 1–2.
+Object.keys(completed).forEach(id=>{
+ const parts=id.split("-");
+ const day=Number(parts[0]);
+ const sub=parts.slice(1).join("-");
+ const subjectName=subjects.find(name=>name.toLowerCase()===sub);
+ if(!subjectName||day<1||day>totalDays||!isRequired(day,subjectName))delete completed[id];
+});
 function build(){
  let frag=document.createDocumentFragment();
  for(let day=1;day<=totalDays;day++){
@@ -146,7 +155,7 @@ function update(){
  const remainingDays=Math.max(0,Math.ceil((end-today)/86400000)+1);
  document.getElementById("daysleft").textContent=today<start?totalDays:remainingDays;
  for(let day=1;day<=totalDays;day++){
-   let done=0,req=day===59?3:4;
+   let done=0,req=day===1?1:(day===2?2:4);
    subjects.forEach(sub=>{if(isRequired(day,sub)&&completed[day+"-"+sub.toLowerCase()])done++;});
    const c=document.getElementById("count-"+day);if(c)c.textContent=done+" / "+req+(done===req?" · Done":"");
  }
@@ -173,11 +182,6 @@ document.getElementById("resetBtn").addEventListener("click",()=>{
 });
 build();
 })();
-</script>
-<script>
-if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
-  window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js").catch(()=>{}));
-}
 </script>
 </body>
 </html>
