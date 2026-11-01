@@ -47,7 +47,7 @@ button:focus-visible,input:focus-visible{outline:3px solid #82b5f4;outline-offse
 <div class="app">
 <header>
 <h1>NEET 2027 — Lecture Tracker</h1>
-<p>29 October – 27 December 2026 · Target: 235 lectures</p>
+<p>1 November – 30 December 2026 · Target: 235 lectures</p>
 </header>
 <section class="summary" aria-label="Progress summary">
 <div class="metric"><div class="label">Completed</div><div class="value" id="completed">0 / 235</div></div>
@@ -57,7 +57,7 @@ button:focus-visible,input:focus-visible{outline:3px solid #82b5f4;outline-offse
 </section>
 <section class="progress-card">
 <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
-<strong>Progress toward 27 December</strong><span id="goalstatus" class="subtle">In progress</span>
+<strong>Progress toward 30 December</strong><span id="goalstatus" class="subtle">In progress</span>
 </div>
 <div class="bar" role="progressbar" aria-label="Lecture completion" aria-valuemin="0" aria-valuemax="235" aria-valuenow="0" id="progressbar"><div class="barfill" id="barfill"></div></div>
 <div class="subtle" id="progressline">0 of 235 lectures completed</div>
@@ -75,7 +75,7 @@ button:focus-visible,input:focus-visible{outline:3px solid #82b5f4;outline-offse
 <div id="days"></div>
 <section class="footer-note">
 <strong>Plan note</strong>
-<p class="subtle">There are 235 actual lecture slots across 60 days. On 29 October, complete Physics (1 lecture). On 30 October, complete Physics and Chemistry (2 lectures). From 31 October through 27 December, complete all four subjects each day.</p>
+<p class="subtle">There are 235 actual lecture slots across 60 days. On 1 November, complete Chemistry (1 lecture). From 2 November through 29 December, complete all four subjects each day. On 30 December, complete Physics and Chemistry (2 lectures).</p>
 <p class="subtle">Your checkmarks are saved in this browser on this device when local storage is available. They do not automatically sync to another browser or device. Export a backup before clearing browser data or switching devices.</p>
 </section>
 </div>
@@ -83,7 +83,7 @@ button:focus-visible,input:focus-visible{outline:3px solid #82b5f4;outline-offse
 (function(){
 const start=new Date(2026,10,1), totalDays=60, target=235;
 const subjects=["Physics","Chemistry","Botany","Zoology"];
-const key="neet235Tracker_v1";
+const key="neet235Tracker_v2";
 let completed={};
 try{completed=JSON.parse(localStorage.getItem(key)||"{}")||{};}catch(e){completed={};}
 const daysEl=document.getElementById("days");
@@ -114,7 +114,7 @@ function build(){
    const title=document.createElement("div");title.className="daytitle";title.textContent="Day "+day;
    const date=document.createElement("div");date.className="daydate";date.textContent=dateFmt.format(d);
    left.append(title,date);
-   const count=document.createElement("div");count.className="daycount";count.id="count-"+day;count.textContent="0 / "+(day===59?3:4);
+   const count=document.createElement("div");count.className="daycount";count.id="count-"+day;count.textContent="0 / "+(day===1?1:(day===60?2:4));
    head.append(left,count);section.append(head);
    const grid=document.createElement("div");grid.className="subjects";
    subjects.forEach(sub=>{
